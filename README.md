@@ -185,7 +185,7 @@ delegation and closes the Handover, returning the account's rent.
 ## 5. On-Chain Architecture
 
 The protocol is a single [Anchor](https://www.anchor-lang.com/) program written
-in Rust.
+in Rust.         
 
 ### 5.1 The `Handover` account
 
