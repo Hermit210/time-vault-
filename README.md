@@ -118,7 +118,7 @@ There are exactly four operations: **initialize**, **check-in**, **claim**, and
 **cancel**. Everything the protocol does is one of these four, and each is fully
 enforced by program logic.
 
----
+---..
 
 ## 3. Design Principles
 
