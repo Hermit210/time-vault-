@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, type ReactNode, type ComponentType } from "react";
+import { useState, useEffect, type ReactNode, type ComponentType, type CSSProperties } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import { getAssociatedTokenAddressSync, TOKEN_PROGRAM_ID } from "@solana/spl-token";
@@ -743,17 +743,8 @@ function Landing() {
 
   return (
     <div className="relative">
-      {/* Restrained maroon glow + hairline grid behind the hero */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[600px] overflow-hidden">
-        <div className="absolute inset-0 bg-hairline-grid opacity-50" />
-        <div
-          className="absolute left-1/2 top-[-14%] h-[440px] w-[860px] max-w-[96vw] -translate-x-1/2 rounded-[50%] opacity-70 blur-[2px]"
-          style={{
-            background:
-              "radial-gradient(50% 50% at 50% 50%, color-mix(in oklch, var(--brand) 26%, transparent), transparent 72%)",
-          }}
-        />
-      </div>
+      {/* Ambient crypto × time backdrop */}
+      <HeroBackdrop />
 
       {/* Hero */}
       <section className="mx-auto max-w-3xl pt-14 pb-10 text-center sm:pt-20">
@@ -913,6 +904,124 @@ function Landing() {
             {t}
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+// Decorative ambient backdrop — clock/dial (time) + orbiting nodes (crypto).
+// Purely visual: aria-hidden, non-interactive, honours reduced-motion.
+function HeroBackdrop() {
+  const spin = (dur: number, reverse = false): CSSProperties => ({
+    transformBox: "view-box",
+    transformOrigin: "400px 400px",
+    animation: `tv-rotate ${dur}s linear infinite${reverse ? " reverse" : ""}`,
+    willChange: "transform",
+  });
+
+  const nodes: { r: number; dur: number; reverse?: boolean; dot: number; line: number }[] = [
+    { r: 300, dur: 44, dot: 4.5, line: 0.1 },
+    { r: 232, dur: 60, reverse: true, dot: 3.5, line: 0.08 },
+    { r: 300, dur: 52, reverse: true, dot: 3, line: 0.07 },
+    { r: 166, dur: 34, dot: 3, line: 0.09 },
+  ];
+
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[680px] overflow-hidden"
+    >
+      {/* Hairline grid + soft maroon glow */}
+      <div className="absolute inset-0 bg-hairline-grid opacity-40" />
+      <div
+        className="absolute left-1/2 top-[-8%] h-[460px] w-[900px] max-w-[98vw] -translate-x-1/2 rounded-[50%] opacity-70 blur-[2px]"
+        style={{
+          background:
+            "radial-gradient(50% 50% at 50% 50%, color-mix(in oklch, var(--brand) 24%, transparent), transparent 72%)",
+        }}
+      />
+
+      {/* Chronosphere: concentric dial + orbiting nodes + sweep */}
+      <div className="absolute left-1/2 top-[-190px] aspect-square w-[1120px] max-w-none -translate-x-1/2 opacity-[0.55] [mask-image:radial-gradient(closest-side,#000_54%,transparent_100%)] [-webkit-mask-image:radial-gradient(closest-side,#000_54%,transparent_100%)]">
+        <svg viewBox="0 0 800 800" className="h-full w-full text-brand">
+          <defs>
+            <radialGradient id="tvSweep" cx="400" cy="400" r="340" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="currentColor" stopOpacity="0.20" />
+              <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+            </radialGradient>
+            <filter id="tvGlow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="3.2" result="b" />
+              <feMerge>
+                <feMergeNode in="b" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Base rings */}
+          <circle cx="400" cy="400" r="360" fill="none" stroke="currentColor" strokeOpacity="0.08" />
+          <circle cx="400" cy="400" r="250" fill="none" stroke="currentColor" strokeOpacity="0.09" />
+          <circle cx="400" cy="400" r="180" fill="none" stroke="currentColor" strokeOpacity="0.10" />
+          <circle cx="400" cy="400" r="110" fill="none" stroke="currentColor" strokeOpacity="0.08" />
+
+          {/* Minute ticks (60) — slowly drifting like time */}
+          <circle
+            cx="400"
+            cy="400"
+            r="340"
+            fill="none"
+            stroke="currentColor"
+            strokeOpacity="0.22"
+            strokeWidth="8"
+            strokeDasharray="2 33.6"
+            style={spin(240)}
+          />
+          {/* Hour ticks (12) — counter-rotating */}
+          <circle
+            cx="400"
+            cy="400"
+            r="300"
+            fill="none"
+            stroke="currentColor"
+            strokeOpacity="0.30"
+            strokeWidth="12"
+            strokeDasharray="3 154"
+            style={spin(360, true)}
+          />
+
+          {/* Radar sweep + hand */}
+          <g style={spin(9)}>
+            <path d="M400,400 L400,60 A340,340 0 0 1 570,106 Z" fill="url(#tvSweep)" />
+            <line x1="400" y1="400" x2="400" y2="64" stroke="currentColor" strokeOpacity="0.32" strokeWidth="1.5" />
+            <circle cx="400" cy="64" r="3.5" fill="currentColor" filter="url(#tvGlow)" />
+          </g>
+
+          {/* Orbiting network nodes with connecting lines */}
+          {nodes.map((n, i) => (
+            <g key={i} style={spin(n.dur, n.reverse)}>
+              <line
+                x1="400"
+                y1="400"
+                x2="400"
+                y2={400 - n.r}
+                stroke="currentColor"
+                strokeOpacity={n.line}
+                strokeWidth="1"
+              />
+              <circle
+                cx="400"
+                cy={400 - n.r}
+                r={n.dot}
+                fill="currentColor"
+                filter="url(#tvGlow)"
+                style={{ animation: `tv-pulse-soft ${5 + i}s ease-in-out infinite` }}
+              />
+            </g>
+          ))}
+
+          {/* Core */}
+          <circle cx="400" cy="400" r="4" fill="currentColor" filter="url(#tvGlow)" opacity="0.7" />
+        </svg>
       </div>
     </div>
   );

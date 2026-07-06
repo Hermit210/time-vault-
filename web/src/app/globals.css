@@ -235,6 +235,22 @@
   }
 }
 
+/* Ambient hero backdrop rotation (clock/orbit motif) */
+@keyframes tv-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes tv-pulse-soft {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
