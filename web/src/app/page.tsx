@@ -31,6 +31,9 @@ import {
   Timer,
   Plus,
   ArrowRight,
+  Lock,
+  ChevronDown,
+  Fingerprint,
 } from "lucide-react";
 import { constructInitializeVaultTransaction } from "@/lib/vault";
 import { useNetwork } from "@/contexts/NetworkContext";
@@ -697,18 +700,71 @@ function Landing() {
     { n: "03", title: "Automatic handover", body: "If the timer runs out, your beneficiary can claim — trustlessly." },
   ];
 
+  const security = [
+    {
+      icon: Lock,
+      title: "Non-custodial by design",
+      body: "Assets rest in a program-derived vault. No company, admin, or third party can ever touch them.",
+    },
+    {
+      icon: ShieldCheck,
+      title: "On-chain enforcement",
+      body: "Timeouts, check-ins, and claims are enforced by the Solana program — not a server that can go down.",
+    },
+    {
+      icon: Fingerprint,
+      title: "You hold the keys",
+      body: "Only your wallet can check in or cancel. Only your beneficiary can claim, and only after the deadline.",
+    },
+  ];
+
+  const faqs = [
+    {
+      q: "Is TimeVault really non-custodial?",
+      a: "Yes. Your tokens sit in an on-chain vault governed entirely by the program's rules. Only you can check in or cancel, and only your named beneficiary can claim once the timeout passes.",
+    },
+    {
+      q: "What happens if I miss a check-in?",
+      a: "Nothing moves until the timeout elapses. Once it does, your beneficiary is able to claim the vault's balance. Right up until that moment, a single check-in resets the clock.",
+    },
+    {
+      q: "Are there any fees?",
+      a: "A 0.5% fee applies on a successful claim. Creating a vault, checking in, and cancelling only cost standard Solana network fees.",
+    },
+    {
+      q: "Which tokens can I protect?",
+      a: "Any SPL token. When you create a vault you simply provide the token's mint address along with your beneficiary.",
+    },
+    {
+      q: "Can I change my mind later?",
+      a: "Absolutely. As the owner you can cancel a vault at any time and reclaim your assets instantly.",
+    },
+  ];
+
   return (
     <div className="relative">
-      {/* Faint, restrained texture behind the hero */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px] bg-hairline-grid opacity-60" />
+      {/* Restrained maroon glow + hairline grid behind the hero */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[600px] overflow-hidden">
+        <div className="absolute inset-0 bg-hairline-grid opacity-50" />
+        <div
+          className="absolute left-1/2 top-[-14%] h-[440px] w-[860px] max-w-[96vw] -translate-x-1/2 rounded-[50%] opacity-70 blur-[2px]"
+          style={{
+            background:
+              "radial-gradient(50% 50% at 50% 50%, color-mix(in oklch, var(--brand) 26%, transparent), transparent 72%)",
+          }}
+        />
+      </div>
 
       {/* Hero */}
-      <section className="mx-auto max-w-3xl pt-14 pb-12 text-center sm:pt-20">
-        <div className="mx-auto inline-flex items-center gap-2 rounded-full border bg-card/70 px-3 py-1 text-xs font-medium text-muted-foreground shadow-elev-1 backdrop-blur">
-          <span className="h-1.5 w-1.5 rounded-full bg-brand" />
+      <section className="mx-auto max-w-3xl pt-14 pb-10 text-center sm:pt-20">
+        <div className="mx-auto inline-flex items-center gap-2 rounded-full border bg-card/70 px-3 py-1 text-xs font-medium text-muted-foreground shadow-elev-1 backdrop-blur animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand opacity-60" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-brand" />
+          </span>
           Non-custodial inheritance on Solana
         </div>
-        <h1 className="mt-6 text-balance text-4xl font-semibold leading-[1.05] tracking-tight sm:text-[3.25rem]">
+        <h1 className="mt-6 text-balance text-4xl font-semibold leading-[1.05] tracking-tight sm:text-[3.25rem] animate-in fade-in slide-in-from-bottom-3 duration-700">
           Pass on your crypto,
           <br className="hidden sm:block" /> exactly as you intend.
         </h1>
@@ -717,52 +773,145 @@ function Landing() {
           go quiet, your chosen beneficiary can claim your assets automatically, with no
           intermediary and no custody.
         </p>
-        <div className="mt-8 flex flex-col items-center gap-3">
+        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <WalletButton size="lg" label="Connect Wallet to Begin" className="shadow-elev-2" />
-          <p className="text-xs text-muted-foreground">Devnet ready · Your keys, your assets</p>
+          <a
+            href="#how-it-works"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-input bg-card/60 px-5 text-[0.95rem] font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+          >
+            See how it works
+            <ChevronDown className="h-4 w-4" />
+          </a>
         </div>
+        <p className="mt-4 text-xs text-muted-foreground">Devnet ready · Your keys, your assets</p>
+      </section>
+
+      {/* Live product preview */}
+      <section className="mx-auto mt-2 max-w-md">
+        <VaultPreview />
       </section>
 
       {/* Feature cards */}
-      <section className="grid gap-4 sm:grid-cols-3">
-        {features.map(({ icon: Icon, title, body }) => (
-          <Card key={title} className="transition-all duration-200 hover:border-border hover:shadow-elev-2">
-            <CardContent className="pt-6">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-brand/15 bg-brand-muted/60 text-brand">
-                <Icon className="h-5 w-5" strokeWidth={1.75} />
-              </div>
-              <h3 className="mt-4 text-base font-semibold tracking-tight">{title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{body}</p>
-            </CardContent>
-          </Card>
-        ))}
+      <section className="mt-24">
+        <SectionEyebrow label="Why TimeVault" />
+        <h2 className="mt-3 max-w-2xl text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
+          Protection that works even when you can&rsquo;t.
+        </h2>
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          {features.map(({ icon: Icon, title, body }) => (
+            <Card key={title} className="group transition-all duration-200 hover:-translate-y-0.5 hover:border-border hover:shadow-elev-2">
+              <CardContent className="pt-6">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-brand/15 bg-brand-muted/60 text-brand transition-transform duration-200 group-hover:scale-105">
+                  <Icon className="h-5 w-5" strokeWidth={1.75} />
+                </div>
+                <h3 className="mt-4 text-base font-semibold tracking-tight">{title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{body}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </section>
 
       {/* How it works */}
-      <section className="mt-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="grid gap-8 sm:grid-cols-3">
-              {steps.map(({ n, title, body }, i) => (
-                <div key={n} className="relative">
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-sm font-semibold text-brand tabular-nums">{n}</span>
-                    <span className="h-px flex-1 bg-border" />
-                    {i < steps.length - 1 && (
-                      <ArrowRight className="hidden h-4 w-4 text-muted-foreground/50 sm:block" />
-                    )}
-                  </div>
-                  <h4 className="mt-3 text-sm font-semibold">{title}</h4>
-                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{body}</p>
+      <section id="how-it-works" className="mt-24 scroll-mt-24">
+        <SectionEyebrow label="How it works" />
+        <h2 className="mt-3 max-w-2xl text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
+          Three steps to a trustless handover.
+        </h2>
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          {steps.map(({ n, title, body }, i) => (
+            <Card key={n} className="relative">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-muted/70 font-mono text-sm font-semibold tabular-nums text-brand">
+                    {n}
+                  </span>
+                  <span className="h-px flex-1 bg-border" />
+                  {i < steps.length - 1 && (
+                    <ArrowRight className="hidden h-4 w-4 text-muted-foreground/40 sm:block" />
+                  )}
                 </div>
-              ))}
+                <h3 className="mt-4 text-base font-semibold tracking-tight">{title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{body}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Security */}
+      <section className="mt-24">
+        <SectionEyebrow label="Security" />
+        <h2 className="mt-3 max-w-2xl text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
+          Built to be trusted with what matters.
+        </h2>
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          {security.map(({ icon: Icon, title, body }) => (
+            <div key={title} className="flex gap-4 rounded-2xl border bg-card/40 p-5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand/15 bg-brand-muted/60 text-brand">
+                <Icon className="h-5 w-5" strokeWidth={1.75} />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold">{title}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{body}</p>
+              </div>
             </div>
+          ))}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="mt-24">
+        <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+          <div>
+            <SectionEyebrow label="FAQ" />
+            <h2 className="mt-3 text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
+              Questions, answered.
+            </h2>
+            <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
+              Everything you need to know before you create your first vault. Still curious?
+              Connect your wallet and try it on Devnet.
+            </p>
+          </div>
+          <Card>
+            <CardContent className="px-5 py-1 sm:px-6">
+              {faqs.map((f) => (
+                <FaqItem key={f.q} q={f.q} a={f.a} />
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="mt-24">
+        <Card className="relative overflow-hidden border-brand/20">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-80"
+            style={{
+              background:
+                "radial-gradient(70% 120% at 50% 0%, color-mix(in oklch, var(--brand) 16%, transparent), transparent 70%)",
+            }}
+          />
+          <CardContent className="relative flex flex-col items-center gap-5 px-6 py-12 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-elev-1">
+              <ShieldCheck className="h-6 w-6" strokeWidth={1.75} />
+            </div>
+            <h2 className="max-w-xl text-balance text-2xl font-semibold tracking-tight sm:text-3xl">
+              Secure your legacy in minutes.
+            </h2>
+            <p className="max-w-md text-pretty text-sm leading-relaxed text-muted-foreground">
+              Set up your first inheritance vault today. It stays fully in your control —
+              until the moment it needs not to be.
+            </p>
+            <WalletButton size="lg" label="Connect Wallet to Begin" className="mt-1 shadow-elev-2" />
           </CardContent>
         </Card>
       </section>
 
       {/* Trust row */}
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
+      <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-muted-foreground">
         {["Non-custodial by design", "On-chain enforcement", "You stay in control"].map((t) => (
           <div key={t} className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-success" strokeWidth={2} />
@@ -770,6 +919,129 @@ function Landing() {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function SectionEyebrow({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="h-1.5 w-1.5 rounded-full bg-brand" />
+      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-brand">{label}</span>
+    </div>
+  );
+}
+
+function FaqItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-b last:border-b-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full cursor-pointer items-center justify-between gap-4 py-4 text-left"
+      >
+        <span className="text-sm font-medium sm:text-[0.95rem]">{q}</span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      <div
+        className={`grid transition-all duration-300 ease-out ${open ? "grid-rows-[1fr] pb-4" : "grid-rows-[0fr]"}`}
+      >
+        <div className="overflow-hidden">
+          <p className="text-sm leading-relaxed text-muted-foreground">{a}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Decorative, self-contained product preview — illustrative only, no chain data.
+function VaultPreview() {
+  const TOTAL = 30 * 86400;
+  const START = Math.floor(TOTAL * 0.78);
+  const [remaining, setRemaining] = useState(START);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setRemaining((r) => (r > 1 ? r - 1 : START));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [START]);
+
+  const days = Math.floor(remaining / 86400);
+  const hours = Math.floor((remaining % 86400) / 3600);
+  const minutes = Math.floor((remaining % 3600) / 60);
+  const seconds = remaining % 60;
+  const pct = Math.min(100, Math.max(2, (remaining / TOTAL) * 100));
+
+  const units: [number, string][] = [
+    [days, "d"],
+    [hours, "h"],
+    [minutes, "m"],
+    [seconds, "s"],
+  ];
+
+  return (
+    <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <Card className="shadow-elev-2">
+        <CardContent className="space-y-5 pt-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-brand/15 bg-brand-muted/60">
+                <ShieldCheck className="h-5 w-5 text-brand" strokeWidth={1.75} />
+              </div>
+              <div>
+                <h3 className="text-base font-semibold leading-tight tracking-tight">Demo Vault</h3>
+                <p className="mt-1 font-mono text-xs text-muted-foreground">7xKq…9fAe</p>
+              </div>
+            </div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-success-border bg-success-surface px-2.5 py-1 text-xs font-medium text-success">
+              <span className="h-1.5 w-1.5 rounded-full bg-success" />
+              Active
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-4 gap-y-4 rounded-xl border bg-muted/30 p-4">
+            {[
+              ["Beneficiary", "3mB…Q1x"],
+              ["Token", "USDC"],
+              ["Balance", "1,250.00"],
+              ["Timeout", "30 days"],
+            ].map(([k, v]) => (
+              <div key={k} className="space-y-1">
+                <p className="text-[0.7rem] font-medium uppercase tracking-wider text-muted-foreground">{k}</p>
+                <p className="font-mono text-sm font-medium tabular-nums text-foreground">{v}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-xl border border-success-border/70 bg-success-surface/50 p-4">
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-success" strokeWidth={2} />
+              <p className="text-sm font-medium text-success">Next check-in due in</p>
+            </div>
+            <div className="mt-3 flex items-end gap-3">
+              {units.map(([value, unit]) => (
+                <div key={unit} className="flex items-baseline gap-1">
+                  <span className="text-3xl font-semibold leading-none tabular-nums tracking-tight text-success">
+                    {value.toString().padStart(2, "0")}
+                  </span>
+                  <span className="text-sm font-medium text-success opacity-70">{unit}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
+              <div className="h-full rounded-full bg-success transition-[width] duration-500 ease-out" style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <span className="pointer-events-none absolute -top-2.5 right-4 rounded-full border bg-card px-2.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wider text-muted-foreground shadow-elev-1">
+        Live preview
+      </span>
     </div>
   );
 }
