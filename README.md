@@ -47,7 +47,7 @@ administrator, and enforces every rule in program code that anyone can verify.
 This document describes the problem, the design, the on-chain architecture, the
 security model, the application stack, and the roadmap.
 
----
+---    
 
 ## Table of Contents
 
