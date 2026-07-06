@@ -8,7 +8,9 @@ Lock your tokens with a beneficiary. If you don't check in within your timeout p
 
 ## How it works
 -> Set it up - Lock your tokens with a beneficiary and timeout (e.g., 30 days)
+
 -> Stay active - Check in before the timeout expires to keep control
+
 -> Handover - If you don't check in, your beneficiary can claim the tokens (with a 0.5% protocol fee)
 
 
