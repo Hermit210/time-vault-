@@ -21,10 +21,10 @@ Lock your tokens with a beneficiary. If you don't check in within your timeout p
 > intermediary, no admin key.
 
 - **Program ID:** `Vau1tNwoYo91MsHHCMwn5Y1WzStFRzRxegH7CAX1vni`
-- **Network:** Solana Devnet (live) · Mainnet (planned)
+- **Network:** Solana Devnet (live) ·  Mainnet (planned)
 - **License / status:** Experimental, unaudited — see [Disclaimer](#13-disclaimer)
 
----
+--------
 
 # TimeVault Whitepaper
 
