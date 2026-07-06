@@ -786,11 +786,6 @@ function Landing() {
         <p className="mt-4 text-xs text-muted-foreground">Devnet ready · Your keys, your assets</p>
       </section>
 
-      {/* Live product preview */}
-      <section className="mx-auto mt-2 max-w-md">
-        <VaultPreview />
-      </section>
-
       {/* Feature cards */}
       <section className="mt-24">
         <SectionEyebrow label="Why TimeVault" />
@@ -954,94 +949,6 @@ function FaqItem({ q, a }: { q: string; a: string }) {
           <p className="text-sm leading-relaxed text-muted-foreground">{a}</p>
         </div>
       </div>
-    </div>
-  );
-}
-
-// Decorative, self-contained product preview — illustrative only, no chain data.
-function VaultPreview() {
-  const TOTAL = 30 * 86400;
-  const START = Math.floor(TOTAL * 0.78);
-  const [remaining, setRemaining] = useState(START);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setRemaining((r) => (r > 1 ? r - 1 : START));
-    }, 1000);
-    return () => clearInterval(id);
-  }, [START]);
-
-  const days = Math.floor(remaining / 86400);
-  const hours = Math.floor((remaining % 86400) / 3600);
-  const minutes = Math.floor((remaining % 3600) / 60);
-  const seconds = remaining % 60;
-  const pct = Math.min(100, Math.max(2, (remaining / TOTAL) * 100));
-
-  const units: [number, string][] = [
-    [days, "d"],
-    [hours, "h"],
-    [minutes, "m"],
-    [seconds, "s"],
-  ];
-
-  return (
-    <div className="relative animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <Card className="shadow-elev-2">
-        <CardContent className="space-y-5 pt-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-start gap-3.5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-brand/15 bg-brand-muted/60">
-                <ShieldCheck className="h-5 w-5 text-brand" strokeWidth={1.75} />
-              </div>
-              <div>
-                <h3 className="text-base font-semibold leading-tight tracking-tight">Demo Vault</h3>
-                <p className="mt-1 font-mono text-xs text-muted-foreground">7xKq…9fAe</p>
-              </div>
-            </div>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-success-border bg-success-surface px-2.5 py-1 text-xs font-medium text-success">
-              <span className="h-1.5 w-1.5 rounded-full bg-success" />
-              Active
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-x-4 gap-y-4 rounded-xl border bg-muted/30 p-4">
-            {[
-              ["Beneficiary", "3mB…Q1x"],
-              ["Token", "USDC"],
-              ["Balance", "1,250.00"],
-              ["Timeout", "30 days"],
-            ].map(([k, v]) => (
-              <div key={k} className="space-y-1">
-                <p className="text-[0.7rem] font-medium uppercase tracking-wider text-muted-foreground">{k}</p>
-                <p className="font-mono text-sm font-medium tabular-nums text-foreground">{v}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="rounded-xl border border-success-border/70 bg-success-surface/50 p-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-success" strokeWidth={2} />
-              <p className="text-sm font-medium text-success">Next check-in due in</p>
-            </div>
-            <div className="mt-3 flex items-end gap-3">
-              {units.map(([value, unit]) => (
-                <div key={unit} className="flex items-baseline gap-1">
-                  <span className="text-3xl font-semibold leading-none tabular-nums tracking-tight text-success">
-                    {value.toString().padStart(2, "0")}
-                  </span>
-                  <span className="text-sm font-medium text-success opacity-70">{unit}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
-              <div className="h-full rounded-full bg-success transition-[width] duration-500 ease-out" style={{ width: `${pct}%` }} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      <span className="pointer-events-none absolute -top-2.5 right-4 rounded-full border bg-card px-2.5 py-0.5 text-[0.65rem] font-medium uppercase tracking-wider text-muted-foreground shadow-elev-1">
-        Live preview
-      </span>
     </div>
   );
 }
