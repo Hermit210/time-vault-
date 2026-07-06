@@ -1,0 +1,1 @@
+export const GATEWAY_ENDPOINT = "https://tpg.sanctum.so";
