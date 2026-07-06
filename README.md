@@ -1,15 +1,17 @@
 # TimeVault
 An automated inheritance plan for your Solana tokens.
 
-WHAT IS THIS? 
+## WHAT IS THIS? 
 
 Lock your tokens with a beneficiary. If you don't check in within your timeout period, they can claim them. Think of it like a digital inheritance plan.
 
 
-How it works
+## How it works
 -> Set it up - Lock your tokens with a beneficiary and timeout (e.g., 30 days)
 -> Stay active - Check in before the timeout expires to keep control
 -> Handover - If you don't check in, your beneficiary can claim the tokens (with a 0.5% protocol fee)
+
+
 > Lock in a beneficiary for your tokens and a check-in schedule. As long as you
 > check in, nothing changes. If you ever go quiet past your timeout, your
 > beneficiary — and only your beneficiary — can claim the assets. No custody, no
