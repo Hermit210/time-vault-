@@ -6,13 +6,19 @@ import { PublicKey, Transaction } from "@solana/web3.js";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, AlertCircle, CheckCircle2, Loader2, X } from "lucide-react";
+import {
+  Clock,
+  ShieldCheck,
+  AlertTriangle,
+  Loader2,
+  X,
+  Copy,
+  Check,
+  ArrowDownToLine,
+} from "lucide-react";
 import { constructCheckinTransaction, constructClaimTransaction, constructCancelTransaction } from "@/lib/vault";
 import type { VaultData } from "@/lib/actions";
 import { toastSuccess, toastError } from "@/lib/toast";
@@ -42,24 +48,75 @@ function getTimeBreakdown(totalSeconds: number): TimeBreakdown {
   return { days, hours, minutes, seconds };
 }
 
-function formatTimeRemaining(seconds: number): string {
-  if (seconds <= 0) return "Expired";
-
-  const { days, hours, minutes, seconds: secs } = getTimeBreakdown(seconds);
-
-  if (days > 0) {
-    return `${days}d ${hours}h ${minutes}m ${secs}s`;
-  } else if (hours > 0) {
-    return `${hours}h ${minutes}m ${secs}s`;
-  } else if (minutes > 0) {
-    return `${minutes}m ${secs}s`;
-  } else {
-    return `${secs}s`;
-  }
+function formatAddress(address: string): string {
+  return `${address.slice(0, 4)}…${address.slice(-4)}`;
 }
 
-function formatAddress(address: string): string {
-  return `${address.slice(0, 4)}...${address.slice(-4)}`;
+// Tone system — refined semantic surfaces, driven by the same urgency logic.
+type Tone = "safe" | "warning" | "danger" | "brand";
+
+const toneStyles: Record<
+  Tone,
+  { pill: string; surface: string; icon: string; text: string; sub: string; bar: string }
+> = {
+  safe: {
+    pill: "bg-success-surface text-success border-success-border",
+    surface: "border-success-border/70 bg-success-surface/50",
+    icon: "text-success",
+    text: "text-success",
+    sub: "text-success/80",
+    bar: "bg-success",
+  },
+  warning: {
+    pill: "bg-warning-surface text-warning border-warning-border",
+    surface: "border-warning-border/70 bg-warning-surface/50",
+    icon: "text-warning",
+    text: "text-warning",
+    sub: "text-warning/80",
+    bar: "bg-warning",
+  },
+  danger: {
+    pill: "bg-danger-surface text-danger border-danger-border",
+    surface: "border-danger-border/70 bg-danger-surface/50",
+    icon: "text-danger",
+    text: "text-danger",
+    sub: "text-danger/80",
+    bar: "bg-danger",
+  },
+  brand: {
+    pill: "bg-brand-muted text-brand border-transparent",
+    surface: "border-brand/25 bg-brand-muted/50",
+    icon: "text-brand",
+    text: "text-brand",
+    sub: "text-brand/80",
+    bar: "bg-brand",
+  },
+};
+
+function CopyChip({ value, label }: { value: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+  const handle = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {}
+  };
+  return (
+    <button
+      type="button"
+      onClick={handle}
+      aria-label={`Copy ${label}`}
+      className="group inline-flex items-center gap-1.5 rounded-md font-mono text-xs text-foreground/80 transition-colors hover:text-foreground cursor-pointer"
+    >
+      {formatAddress(value)}
+      {copied ? (
+        <Check className="h-3 w-3 text-success" />
+      ) : (
+        <Copy className="h-3 w-3 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+      )}
+    </button>
+  );
 }
 
 export function VaultCard({ vault, type, balance, onAction }: VaultCardProps) {
@@ -99,6 +156,47 @@ export function VaultCard({ vault, type, balance, onAction }: VaultCardProps) {
     return "safe";
   };
   const urgency = getUrgency();
+
+  // Presentation tone: a claimable beneficiary vault reads as a positive call-to-action.
+  const tone: Tone = canClaim ? "brand" : urgency;
+  const t = toneStyles[tone];
+  const barWidth = isExpired ? (canClaim ? 100 : 0) : Math.min(Math.max(percentRemaining, 2), 100);
+
+  const statusLabel = canClaim
+    ? "Claimable"
+    : type === "owner"
+      ? isExpired
+        ? "Expired"
+        : urgency === "danger"
+          ? "Urgent"
+          : urgency === "warning"
+            ? "Action needed"
+            : "Active"
+      : isExpired
+        ? "Expired"
+        : "Locked";
+
+  const headingLabel =
+    type === "owner"
+      ? isExpired
+        ? "Check-in overdue by"
+        : "Next check-in due in"
+      : canClaim
+        ? "Claimable now"
+        : "Unlocks in";
+
+  const captionLabel =
+    type === "owner"
+      ? isExpired
+        ? "Your beneficiary can now claim this vault."
+        : urgency === "danger"
+          ? "Check in now to keep this vault active."
+          : urgency === "warning"
+            ? "Check in soon to stay active."
+            : "All good — check in periodically to stay active."
+      : canClaim
+        ? "The owner has been inactive. You can claim now."
+        : "Available to claim once the owner's deadline passes.";
 
   const handleCheckin = async () => {
     if (!publicKey || !wallet || !signTransaction) return;
@@ -219,166 +317,106 @@ export function VaultCard({ vault, type, balance, onAction }: VaultCardProps) {
     }
   };
 
+  const { days, hours, minutes, seconds } = getTimeBreakdown(Math.abs(timeRemaining));
+  const showDays = days > 0;
+  const showHours = showDays || hours > 0;
+  const showMinutes = showHours || minutes > 0;
+
   return (
-    <Card>
+    <Card className="overflow-hidden transition-all duration-200 hover:border-border hover:shadow-elev-2">
       <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-lg">
-              {type === "owner" ? "Your Vault" : "Inheritance Vault"}
-            </CardTitle>
-            <CardDescription className="font-mono text-xs">
-              {formatAddress(vault.publicKey)}
-            </CardDescription>
-          </div>
-          <Badge
-            variant={urgency === "danger" ? "destructive" : urgency === "warning" ? "default" : "secondary"}
-            className={
-              urgency === "safe" && !isExpired
-                ? "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200"
-                : ""
-            }
-          >
-            {urgency === "danger"
-              ? isExpired ? "Expired" : "Urgent"
-              : urgency === "warning"
-              ? "Action Needed"
-              : "Active"}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-3 text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">
-              {type === "owner" ? "Beneficiary" : "Owner"}
-            </span>
-            <code className="text-xs">
-              {formatAddress(type === "owner" ? vault.beneficiary : vault.owner)}
-            </code>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Token Mint</span>
-            <code className="text-xs">{formatAddress(vault.mint)}</code>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Balance</span>
-            <span className="font-medium">{balance.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Timeout Period</span>
-            <span className="font-medium">
-              {Math.floor(vault.timeout / 86400)} days
-            </span>
-          </div>
-        </div>
-
-        <div
-          className={`rounded-lg border p-4 ${
-            urgency === "danger"
-              ? "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950"
-              : urgency === "warning"
-              ? "border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-950"
-              : "border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950"
-          }`}
-        >
-          <div className="flex items-start gap-3">
-            <Clock
-              className={`h-5 w-5 mt-0.5 ${
-                urgency === "danger"
-                  ? "text-red-600 dark:text-red-400"
-                  : urgency === "warning"
-                  ? "text-yellow-600 dark:text-yellow-400"
-                  : "text-green-600 dark:text-green-400"
-              }`}
-            />
-            <div className="flex-1">
-              <p
-                className={`text-sm font-medium ${
-                  urgency === "danger"
-                    ? "text-red-900 dark:text-red-100"
-                    : urgency === "warning"
-                    ? "text-yellow-900 dark:text-yellow-100"
-                    : "text-green-900 dark:text-green-100"
-                }`}
-              >
-                {type === "owner"
-                  ? isExpired
-                    ? "⚠️ Check-in Overdue!"
-                    : "Next Check-in"
-                  : canClaim
-                  ? "✓ Ready to Claim"
-                  : "Available to Claim"}
-              </p>
-
-              {/* Time Display */}
-              <div className="mt-2 flex items-center gap-2 flex-wrap">
-                {(() => {
-                  const { days, hours, minutes, seconds } = getTimeBreakdown(Math.abs(timeRemaining));
-                  const timeColor = urgency === "danger"
-                    ? "text-red-700 dark:text-red-300"
-                    : urgency === "warning"
-                    ? "text-yellow-700 dark:text-yellow-300"
-                    : "text-green-700 dark:text-green-300";
-
-                  return (
-                    <>
-                      {days > 0 && (
-                        <div className="flex items-baseline gap-0.5">
-                          <span className={`text-2xl font-bold tabular-nums ${timeColor}`}>{days}</span>
-                          <span className={`text-xs font-medium ${timeColor}`}>d</span>
-                        </div>
-                      )}
-                      {(days > 0 || hours > 0) && (
-                        <div className="flex items-baseline gap-0.5">
-                          <span className={`text-2xl font-bold tabular-nums ${timeColor}`}>{hours}</span>
-                          <span className={`text-xs font-medium ${timeColor}`}>h</span>
-                        </div>
-                      )}
-                      {(days > 0 || hours > 0 || minutes > 0) && (
-                        <div className="flex items-baseline gap-0.5">
-                          <span className={`text-2xl font-bold tabular-nums ${timeColor}`}>{minutes}</span>
-                          <span className={`text-xs font-medium ${timeColor}`}>m</span>
-                        </div>
-                      )}
-                      <div className="flex items-baseline gap-0.5">
-                        <span className={`text-2xl font-bold tabular-nums ${timeColor}`}>{seconds}</span>
-                        <span className={`text-xs font-medium ${timeColor}`}>s</span>
-                      </div>
-                      {isExpired && type === "owner" && (
-                        <span className={`text-sm font-medium ${timeColor}`}>ago</span>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
-
-              <p
-                className={`text-xs mt-2 ${
-                  urgency === "danger"
-                    ? "text-red-700 dark:text-red-300"
-                    : urgency === "warning"
-                    ? "text-yellow-700 dark:text-yellow-300"
-                    : "text-green-700 dark:text-green-300"
-                }`}
-              >
-                {type === "owner"
-                  ? isExpired
-                    ? "Your beneficiary can now claim this vault"
-                    : urgency === "danger"
-                    ? "🔔 Check in urgently needed!"
-                    : urgency === "warning"
-                    ? "⏰ Check-in needed soon"
-                    : "✓ All good - check in to keep your vault active"
-                  : canClaim
-                  ? "Owner has been inactive - you can claim now"
-                  : "Wait for the deadline to claim"}
-              </p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand/15 bg-brand-muted/60">
+              <ShieldCheck className="h-5 w-5 text-brand" strokeWidth={1.75} />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-base font-semibold leading-tight tracking-tight">
+                {type === "owner" ? "Your Vault" : "Inheritance Vault"}
+              </h3>
+              <CopyChip value={vault.publicKey} label="vault address" />
             </div>
           </div>
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${t.pill}`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${t.bar}`} />
+            {statusLabel}
+          </span>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-5">
+        {/* Metadata grid */}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-4 rounded-xl border bg-muted/30 p-4">
+          <div className="space-y-1">
+            <p className="text-[0.7rem] font-medium uppercase tracking-wider text-muted-foreground">
+              {type === "owner" ? "Beneficiary" : "Owner"}
+            </p>
+            <CopyChip
+              value={type === "owner" ? vault.beneficiary : vault.owner}
+              label={type === "owner" ? "beneficiary address" : "owner address"}
+            />
+          </div>
+          <div className="space-y-1">
+            <p className="text-[0.7rem] font-medium uppercase tracking-wider text-muted-foreground">
+              Token Mint
+            </p>
+            <CopyChip value={vault.mint} label="token mint" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-[0.7rem] font-medium uppercase tracking-wider text-muted-foreground">
+              Balance
+            </p>
+            <p className="font-mono text-sm font-medium tabular-nums text-foreground">
+              {balance.toFixed(2)}
+            </p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[0.7rem] font-medium uppercase tracking-wider text-muted-foreground">
+              Timeout Period
+            </p>
+            <p className="text-sm font-medium tabular-nums text-foreground">
+              {Math.floor(vault.timeout / 86400)}{" "}
+              <span className="text-muted-foreground font-normal">days</span>
+            </p>
+          </div>
         </div>
 
-        <div className="flex justify-end gap-2">
+        {/* Countdown */}
+        <div className={`rounded-xl border p-4 ${t.surface}`}>
+          <div className="flex items-center gap-2">
+            {isExpired && type === "owner" ? (
+              <AlertTriangle className={`h-4 w-4 ${t.icon}`} strokeWidth={2} />
+            ) : canClaim ? (
+              <ArrowDownToLine className={`h-4 w-4 ${t.icon}`} strokeWidth={2} />
+            ) : (
+              <Clock className={`h-4 w-4 ${t.icon}`} strokeWidth={2} />
+            )}
+            <p className={`text-sm font-medium ${t.text}`}>{headingLabel}</p>
+          </div>
+
+          {/* Time display */}
+          <div className="mt-3 flex items-end gap-3">
+            {showDays && <TimeUnit value={days} unit="d" color={t.text} />}
+            {showHours && <TimeUnit value={hours} unit="h" color={t.text} />}
+            {showMinutes && <TimeUnit value={minutes} unit="m" color={t.text} />}
+            <TimeUnit value={seconds} unit="s" color={t.text} />
+          </div>
+
+          {/* Progress — proportion of the timeout window still remaining */}
+          <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
+            <div
+              className={`h-full rounded-full ${t.bar} transition-[width] duration-500 ease-out`}
+              style={{ width: `${barWidth}%` }}
+            />
+          </div>
+
+          <p className={`mt-3 text-xs ${t.sub}`}>{captionLabel}</p>
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end gap-2 pt-1">
           {type === "owner" ? (
             <>
               <Button
@@ -390,7 +428,7 @@ export function VaultCard({ vault, type, balance, onAction }: VaultCardProps) {
                 {isCancelling ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Cancelling...
+                    Cancelling…
                   </>
                 ) : (
                   <>
@@ -407,10 +445,13 @@ export function VaultCard({ vault, type, balance, onAction }: VaultCardProps) {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
+                    Processing…
                   </>
                 ) : (
-                  "Check In"
+                  <>
+                    <ShieldCheck className="mr-2 h-4 w-4" />
+                    Check In
+                  </>
                 )}
               </Button>
             </>
@@ -423,10 +464,13 @@ export function VaultCard({ vault, type, balance, onAction }: VaultCardProps) {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
+                  Processing…
                 </>
               ) : (
-                "Claim Vault"
+                <>
+                  <ArrowDownToLine className="mr-2 h-4 w-4" />
+                  Claim Vault
+                </>
               )}
             </Button>
           )}
@@ -436,3 +480,13 @@ export function VaultCard({ vault, type, balance, onAction }: VaultCardProps) {
   );
 }
 
+function TimeUnit({ value, unit, color }: { value: number; unit: string; color: string }) {
+  return (
+    <div className="flex items-baseline gap-1">
+      <span className={`text-3xl font-semibold leading-none tabular-nums tracking-tight ${color}`}>
+        {value.toString().padStart(2, "0")}
+      </span>
+      <span className={`text-sm font-medium ${color} opacity-70`}>{unit}</span>
+    </div>
+  );
+}

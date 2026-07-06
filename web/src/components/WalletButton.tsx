@@ -14,7 +14,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Check, Copy, LogOut, Wallet, ChevronDown } from 'lucide-react';
 
-export function WalletButton() {
+type WalletButtonProps = {
+  size?: 'default' | 'sm' | 'lg';
+  className?: string;
+  label?: string;
+};
+
+export function WalletButton({ size = 'sm', className, label = 'Connect Wallet' }: WalletButtonProps = {}) {
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const { publicKey, disconnect, connected } = useWallet();
@@ -38,18 +44,18 @@ export function WalletButton() {
 
   if (!mounted) {
     return (
-      <Button variant="default" size="sm" disabled>
+      <Button variant="default" size={size} disabled className={className}>
         <Wallet className="mr-2 h-4 w-4" />
-        Connect Wallet
+        {label}
       </Button>
     );
   }
 
   if (!connected || !publicKey) {
     return (
-      <Button variant="default" size="sm" onClick={() => setVisible(true)} className="cursor-pointer">
+      <Button variant="default" size={size} onClick={() => setVisible(true)} className={`cursor-pointer ${className ?? ''}`}>
         <Wallet className="mr-2 h-4 w-4" />
-        Connect Wallet
+        {label}
       </Button>
     );
   }
@@ -60,24 +66,30 @@ export function WalletButton() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2 cursor-pointer">
-          <Wallet className="h-4 w-4" />
+        <Button variant="outline" size="sm" className="gap-2 cursor-pointer font-mono text-xs tracking-tight">
+          <span className="relative flex h-2 w-2">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-60" />
+            <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+          </span>
           <span className="hidden sm:inline-block">{shortAddress}</span>
           <ChevronDown className="h-3 w-3 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>My Wallet</DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-60">
+        <DropdownMenuLabel className="flex items-center gap-2">
+          <Wallet className="h-4 w-4 text-muted-foreground" />
+          My Wallet
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleCopy} className="cursor-pointer">
           {copied ? (
-            <Check className="mr-2 h-4 w-4" />
+            <Check className="mr-2 h-4 w-4 text-success" />
           ) : (
             <Copy className="mr-2 h-4 w-4" />
           )}
           <div className="flex flex-col">
-            <span>{copied ? 'Copied!' : 'Copy Address'}</span>
-            <span className="text-xs text-muted-foreground">{shortAddress}</span>
+            <span>{copied ? 'Copied!' : 'Copy address'}</span>
+            <span className="font-mono text-xs text-muted-foreground">{shortAddress}</span>
           </div>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
