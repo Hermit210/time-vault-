@@ -94,7 +94,7 @@ pattern, and TimeVault implements it natively on Solana.
 
 ---
 
-## 2. Solution Overview
+## 2. Solution Overview ::
 
 TimeVault is built around a single on-chain account — the **Handover** — that
 records an agreement:
@@ -118,7 +118,7 @@ There are exactly four operations: **initialize**, **check-in**, **claim**, and
 **cancel**. Everything the protocol does is one of these four, and each is fully
 enforced by program logic.
 
----..
+------
 
 ## 3. Design Principles
 
